@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Annotation Viewer</title>
+
+    <!-- Bootstrap core CSS -->
+    <!--  <link href="/static/content/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"> 
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+    <link href="/static/css/ui.jqgrid-bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" media="screen" href="/static/css/jquery.fileupload.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/static/css/jquery.fileupload-ui.css" />
+    <script type="text/javascript">$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};</script>
+    <!-- Placed at the end of the document so the pages load faster -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+	<script src="/static/js/i18n/grid.locale-en.js" type="text/javascript"></script>
+    <script src="/static/scripts/bootstrap.min.js"></script>
+    <script src="/static/js/jquery.jqGrid.min.js"></script>
+    <script src="/static/js/jquery.iframe-transport.js" type="text/javascript"></script>
+    <script src="/static/js/jquery.ui.widget.js" type="text/javascript"></script>
+    <script src="/static/js/jquery.fileupload.js" type="text/javascript"></script>
+    <script src="/static/scripts/lib/rangy-core.js" type="text/javascript"></script>
+    <script src="/static/scripts/lib/rangy-classapplier.js" type="text/javascript"></script>
+    <script src="/static/scripts/lib/rangy-highlighter.js" type="text/javascript"></script>
+    <script src="/static/scripts/ryb-color-mixer.js" type="text/javascript"></script>
+    <script src="/static/scripts/bootstrap-session-timeout.js" type="text/javascript"></script>
+    
+    <script>
+    	$(function() {
+    		$('#admin').hide();
+        	if ('{{is_admin}}' == "Admin"){
+        		$('#admin').show();
+        	}
+
+    	});
+    	
+    	window.onload = function() {
+            rangy.init();
+    	}
+
+    </script>
+    
+
+    
+
+    
+    <style>
+    
+	.checkbox {
+		margin-left:20px;
+	}
+    
+    #fileContent {
+            white-space: pre-wrap;
+    }
+        
+	.SignSymptomMention {
+		background-color: rgba(255, 217, 113, 1);
+	}
+	
+	.AnatomicalSiteMention {
+		background-color: rgba(249, 111, 243, 1);
+	}
+	
+	.ProcedureMention {
+		background-color: rgba(111, 250, 159, 1);
+	}
+	
+	.DiseaseDisorderMention {
+		background-color: rgba(107, 202, 229, 1);
+	}
+</style>
+    
+  </head>
+
+
+<body>
+
+  	   <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" data-target="#">{{ SITE_NAME }}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-left">
+            <li ><a href="">Home</a></li>
+            <li><a href=""  data-toggle="modal" data-target="#tableDialog">Load from DB</a></li>
+			<li><label for="uploadFile" style="  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+color: #999;
+padding-top: 15px;
+padding-bottom: 15px;"><input id="uploadFile" type="file" style="display:none;">Upload</label>
+			</li>
+            <li><a id="clearButton" data-target="#" prevent-default>Clear</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+          	{% if is_admin.upper() == 'ADMIN' %}
+            	<li ><a href="admin">Admin Area</a></li>
+          	{% endif %}
+            <li><a href="logout">Logout</a></li>
+            <p class="nav navbar-text" style="margin-right:10px">Howdy {{myuser}}</p>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-3 col-md-2 sidebar">
+				<div class="form-group">
+					<label class="control-label" for="accNums">Accession Number</label>
+					<select id="accNums" class="form-control">
+					</select>
+				</div>
+
+
+				<div id="DiseaseDisorder">
+					<input type="checkbox" id="dbox1" /> <label for="dbox1"
+						style="background-color: rgba(107, 202, 229, 1); font-weight: bold;">Disease
+						Disorder Mention</label>
+				</div>
+				<div id="SignSymptoms">
+					<input type="checkbox" id="dbox2" /> <label for="dbox2"
+						style="background-color: rgba(255, 217, 113, 1); font-weight: bold;">Sign
+						Symptoms Mention</label>
+				</div>
+				<div id="AnatomicalSite">
+					<input type="checkbox" id="dbox3" /> <label for="dbox3"
+						style="background-color: rgba(249, 111, 243, 1); font-weight: bold;">Anatomical
+						Site Mention</label>
+				</div>
+				<div id="ProcedureMention">
+					<input type="checkbox" id="dbox4" /> <label for="dbox4"
+						style="background-color: rgba(111, 250, 159, 1); font-weight: bold;">Procedure
+						Mention</label>
+				</div>
+			</div>
+			<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+				<div id="alertMessages" class="alert collapse">
+						<button id="alertWarningBtn" type="button" class="close" data-hide="alert" aria-label="close">&times;</button>
+                        <p id="alertmessage"></p>
+				</div>
+			
+				<h1 class="page-header">Note Text</h1>
+
+ 				<div id="fileContent" style="height:200px;overflow-y:scroll;"></div>
+				<div class="row placeholders">
+
+
+				
+				
+					<div id="noresults" class="modal fade" tabindex="-1" role="dialog">
+					  <div class="modal-dialog">
+					    <div class="modal-content">
+					      <div class="modal-header">
+					        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					        <h4 id="resultTitle" class="modal-title"></h4>
+					      </div>
+					      <div id="resultMessage" class="modal-body">
+					        
+					      </div>
+					      <div class="modal-footer">
+					        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					      </div>
+					    </div><!-- /.modal-content -->
+					  </div><!-- /.modal-dialog -->
+					</div><!-- /.modal -->
+					<script>
+					    $.sessionTimeout({
+					        keepAliveUrl: "{{ url_for('ping') }}",
+					        logoutUrl: "{{ url_for('logout') }}",
+					        redirUrl: "{{ url_for('logout') }}",
+					        countdownMessage: 'Redirecting in {timer} seconds.',
+					        hideModalOnAction: false,
+					        keepAliveInterval: {{ KEEPALIVE_INTERVAL_MS }},
+					        warnAfter: {{ TIMEOUT_WARNING_MS }}, 
+				            redirAfter: {{ TIMEOUT_LOGOUT_MS }}
+					    });
+   					</script>
+					
+					
+					<div id=tableDialog class="modal fade" role="dialog">
+						<div class="modal-dialog">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button type="button" class="close" data-dismiss="modal"
+										aria-hidden="true">×</button>
+									<h4 class="modal-title">Load from DB</h4>
+								</div>
+								<div class="modal-body">
+									<div class="form-group">
+										<label for="dbname">Database Name</label> 
+										<!-- 
+										<input
+											class="form-control" id="dbname"
+											placeholder="Enter database (and schema)" value="dbo"
+											name="dbname" type="text">-->
+										<select id="dbname" class="form-control" name="dbSelect">
+											<option value ="" selected="selected">Choose Database</option>
+										</select>
+									</div>
+									<div class="form-group">
+										<label for="tblname">Table Name</label> 
+										
+										<!-- 
+										<input
+											class="form-control" id="tblname"
+											placeholder="Enter table name" value="XMIDebug" name="tblname"
+											type="text">
+											-->
+											
+										<select id="tblname" class="form-control" name="tblSelect">
+											<option value ="" selected="selected">Choose a Table</option>
+										</select>
+										<div class="modal-footer">
+											<a href="#" data-dismiss="modal" class="btn">Close</a>
+											<button id="submitDB" class="btn btn-primary" disabled>Submit</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<h2 class="sub-header">NLP Annotation Details</h2>
+	            <div id="gridWrapper">
+	                <table id="list4" class="ui-jqgrid"></table>
+	            </div>
+			</div>
+		</div>
+	</div>
+ 
+    
+  </body>
+<script>
+    $('#dbox1').bind('change', function () {
+        if ($(this).is(':checked')) {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+				
+                if (ddAnnotArray[i].annotationType == 'DiseaseDisorderMention') {
+                    highlightCharacterRange(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA, "DiseaseDisorderMention");
+                }
+            }
+
+        }
+        else {
+            var element = document.getElementById("fileContent")
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+                if (ddAnnotArray[i].annotationType == 'DiseaseDisorderMention') {
+                    removeHighlight(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA, 'DiseaseDisorderMention');
+                }
+            }
+        }
+    });
+
+    $('#dbox2').bind('change', function () {
+        if ($(this).is(':checked')) {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'SignSymptomMention') {
+                    highlightCharacterRange(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA, "SignSymptomMention");
+                }
+            }
+
+        }
+        else {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'SignSymptomMention') {
+                    removeHighlight(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA,'SignSymptomMention');
+                }
+            }
+        }
+    });
+
+    $('#dbox3').bind('change', function () {
+        if ($(this).is(':checked')) {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'AnatomicalSiteMention') {
+                    highlightCharacterRange(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA, "AnatomicalSiteMention");
+                }
+            }
+
+        }
+        else {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'AnatomicalSiteMention') {
+                    removeHighlight(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA,'AnatomicalSiteMention');
+                }
+            }
+        }
+    });
+
+
+    $('#dbox4').bind('change', function () {
+        if ($(this).is(':checked')) {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'ProcedureMention') {
+                    highlightCharacterRange(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA, "ProcedureMention");
+
+                }
+            }
+
+        }
+        else {
+            var element = document.getElementById("fileContent")
+            
+            var ddAnnotArray = $('#list4').jqGrid('getRowData');
+
+            for (i = 0; i < ddAnnotArray.length ; i++) {
+
+                if (ddAnnotArray[i].annotationType == 'ProcedureMention') {
+                    removeHighlight(element, ddAnnotArray[i].bA, ddAnnotArray[i].eA,"ProcedureMention");
+                }
+            }
+        }
+    });
+
+</script>
+  
+  
+<script>
+
+    var jsonData = {};
+
+
+    jQuery("#list4").jqGrid({
+        hidegrid: false,
+        datatype: "local",
+        height: 500,
+		styleUI : 'Bootstrap',
+        width: null,
+        shrinkToFit: false,
+        colNames: ['AnnotID', 'Covered Text', 'Begin Annotation', 'End Annotation', 'Negated', 'Generic', 'History Of', 'Annotation Type'],
+        colModel: [
+            { name: 'annotID', index: 'annotID', jsonmap: 'annotID', hidden: true},
+            { name: 'ct', index: 'ct', autowidth: true, shrinkToFit: false, jsonmap: "ct", sortable: true, sortype: 'text'},
+            { name: 'bA', index: 'bA', autowidth: true, shrinkToFit: false, jsonmap: "bA", sortable: true, sorttype: 'int' },
+            { name: 'eA', index: 'eA', autowidth: true, shrinkToFit: false, jsonmap: "eA", sorttype: 'int'},
+            { name: 'negated', index: 'negated', autowidth: true, shrinkToFit: false, align: "right", jsonmap: "negated", formatter: cellFormatter},
+            { name: 'generic', index: 'generic', autowidth: true, shrinkToFit: false, align: "right", jsonmap: "generic", formatter: cellFormatter },
+            { name: 'historyOf', index: 'historyOf', autowidth: true, shrinkToFit: false, align: "right", jsonmap: "historyOf", formatter: cellFormatter },
+            { name: 'annotationType', index: 'annotationType', width:200, sortable: true, jsonmap: "annotationType" }
+        ],
+        gridview:true,
+        rowNum: 1000000,
+        sortname: "bA",
+        caption: "Document Annotation Details",
+        viewrecords: true,
+        emptyrecords: "No annotations to view",
+        loadComplete: function (data) {
+            
+            for (i = 0; i < data.length;i++){
+                jsonData[data[i].annotID] = data[i].userdata;
+            }
+            
+        },
+        subGrid: true,
+
+        subGridRowExpanded: function (subgridId, rowid) {
+            annotID = $("#list4").jqGrid("getCell", rowid, "annotID");
+            var subgridTableId = subgridId + "_t";
+            $("#" + subgridId).html("<table id='" + subgridTableId + "'></table>");
+            $("#" + subgridTableId).jqGrid({
+                datatype: 'jsonstring',
+                styleUI : 'Bootstrap',
+                datastr: jsonData[annotID],
+                width: null,
+                shrinkToFit: false,
+                colNames: ["CUI", "PreferredText"],
+                colModel: [
+                  {name: "cui", jsonmap: "cui", width: 150, key: true},
+                  {name: "preferredText", jsonmap: "prefText", width:300}
+                ],
+                height: "100%",
+                rowNum: 1000000,
+                sortname: "cui",
+                jsonReader: {root: 'gridModel', repeatitems: false, id: "id"},
+                idPrefix: "s_" + rowid + "_"
+            });
+        },
+        jsonReader: {
+            repeatitems: false
+        },
+
+
+    });
+    var lastSel;
+    $("#list4").jqGrid('setGridParam',
+    {
+        onSelectRow: function (id) {
+            if (lastSel == id) {
+                begin = $("#list4").jqGrid("getCell", lastSel, "bA");
+                end = $("#list4").jqGrid("getCell", lastSel, "eA");
+                annotType = $("#list4").jqGrid("getCell", lastSel, "annotationType");
+                var container = document.getElementById("fileContent");
+                removeHighlight(container, begin, end, annotType);
+                $("#list4").jqGrid("resetSelection",lastSel);
+                lastSel = NaN;
+
+            }
+            else {
+
+                begin = $("#list4").jqGrid("getCell", id, "bA");
+                end = $("#list4").jqGrid("getCell", id, "eA");
+                annotType = $("#list4").jqGrid("getCell", id, "annotationType");
+                var container = document.getElementById("fileContent");
+                highlightCharacterRange(container, begin, end, annotType);
+                lastSel = id;
+            }
+        }
+
+
+    });
+
+    $("#list4").jqGrid('setGridParam',
+    {
+        beforeSelectRow: function (id) {
+            if (lastSel !== id && lastSel != NaN && lastSel != undefined) {
+
+                begin = $("#list4").jqGrid("getCell", lastSel, "bA");
+                end = $("#list4").jqGrid("getCell", lastSel, "eA");
+                annotType = $("#list4").jqGrid("getCell", lastSel, "annotationType");
+                var container = document.getElementById("fileContent");
+                removeHighlight(container, begin, end, annotType);
+            }
+
+        }
+
+
+    });
+
+
+    function cellFormatter (cellvalue, options, rowObject){
+            if (cellvalue == "YES"){
+                        return '<span style="color:red">' + cellvalue + '</span>';
+                    }
+                    else{
+                        return cellvalue;
+            }
+    }
+</script>
+ <script> 
+     $(function () {
+         $('#uploadFile').fileupload({
+             url: $SCRIPT_ROOT + "/upload",
+             dataType: 'json',
+
+             done: function (e, data) {
+                 var sofa = data.result.sofa;
+                 $('#fileContent').html(sofa);
+                 jQuery("#list4").jqGrid('setGridParam', { datatype: 'jsonstring', datastr: data.result.xmiAnnotations }).trigger('reloadGrid');
+
+             }
+         });
+     });
+ </script> 
+ 
+
+<script>
+    $(function () {
+        $('#clearButton').click(function () {
+            $('#fileContent').replaceWith('<div id="fileContent" style="height:200px;overflow-y:scroll;"></div>');
+            clearCheckBoxes();
+            jQuery("#list4").jqGrid('clearGridData');
+        });
+    });
+
+</script>
+
+    <script>
+        function clearCheckBoxes() {
+
+            var checkboxes;
+            checkboxes = document.getElementsByTagName('input');
+ 
+            for (var i=0; i<checkboxes.length; i++)  {
+                if (checkboxes[i].type == 'checkbox')   {
+                    checkboxes[i].checked = false;
+                }
+            }
+        }
+
+
+    </script>
+
+    <script>
+        $(function() {
+            $('#logout').click(function() {
+                window.location = $SCRIPT_ROOT + "/logout";
+            });});
+
+    </script>
+    <script>
+        $(function() {
+            $('#admin').click(function() {
+                window.location = $SCRIPT_ROOT + "/admin";
+            });});
+
+    </script>
+
+  
+  <script>
+    $(function () {
+        $("button#submitDB").click(function () {
+                   	window.dbname = $("#dbname").val();
+                    window.tblname = $("#tblname").val();
+                    $.ajax({
+                        type: 'GET',
+                        url: $SCRIPT_ROOT + '/getAllAnnotations',
+                        dataType: 'json',
+                        data: { "dbname": window.dbname, "tblname": window.tblname },
+                        contentType: false,
+                        cache: false,
+                        processData: true,
+                        async: true,
+                        success: function (data) {
+
+                        	if ($.isEmptyObject(data)){
+                        		$("#tableDialog").modal("hide");
+                        		$("#alertMessages").addClass("alert-warning");
+                        		$("#alertmessage").replaceWith("<strong>Warning!</strong> There are no records in this table.  Please choose another table.");
+                        		$("#alertMessages").show();
+                        		//$("#resultTitle").replaceWith("No results")
+                        		//$("#resultMessage").replaceWith("<p>There are no result for this table.  Please select another combination.</p>");
+    	            			//$("#noresults").modal('show');
+								return;
+                        	}
+	                            $('#accNums').empty();
+	                            var html = '';
+	                            var len = data.length;
+	                            for (var i = 0; i < len; i++) {
+	                                if (i == 0) {
+	                                    html += '<option selected="selected" value="' + data[i].accessionNum + '">' + data[i].accessionNum + '</option>';
+	                                }
+	                                else {
+	                                    html += '<option value="' + data[i].accessionNum + '">' + data[i].accessionNum + '</option>';
+	                                }
+	                            }
+								
+	                            $('#accNums').append(html);
+	                            $("#accNums").trigger("change");
+								$("#tableDialog").modal("hide");
+                        }
+                    });
+
+      
+                })
+            
+    });
+
+</script>
+<script>
+
+    $("#accNums").change(function () {
+        var optionSelected = $("option:selected", this);
+        var valueSelected = this.value;
+        $.ajax({
+            type: 'GET',
+            url: $SCRIPT_ROOT + '/getAnnoationsDB',
+            dataType: 'json',
+            data: { "accessionNumber": valueSelected,"dbname": window.dbname, "tblname": window.tblname },
+            contentType: false,
+            cache: false,
+            processData: true,
+            async: true,
+            success: function (myData) {
+            	clearCheckBoxes();
+                var sofa = myData.sofa;
+                $('#fileContent').html(sofa);
+                jQuery("#list4").jqGrid('setGridParam', { datatype: 'jsonstring', datastr: myData.xmiAnnotations }).trigger('reloadGrid');
+
+
+
+            },
+        });
+    });
+
+</script>
+<script>
+
+    //rangy.init();
+    var ranges = [];
+    function highlightCharacterRange(el, start, end, myclassName) {
+
+        var range = rangy.createRange();
+
+        range.moveToBookmark({
+            containerNode: el,
+            start: start,
+            end: end
+        });
+        range.splitBoundaries();
+        var textNodes = range.getNodes([3]);
+
+        for (var i = 0, textNode, span; textNode = textNodes[i++];) {
+            span = document.createElement("span");            
+            if ($(textNode.parentNode).is("span")) {
+
+                if ($(textNode.parentNode).attr('class') != myclassName && ($(textNode.parentNode).attr('class') != undefined || $(textNode).parent().style != NaN)) {
+                    var myNewColor = newColor($(textNode.parentNode).css("background-color").split("(")[1].split(")")[0].split(","), getStyle("." + myclassName).split("(")[1].split(")")[0].split(","));
+                    $(span).addClass(myclassName);
+                    
+                    span.style.backgroundColor = myNewColor;
+                }
+            }
+            else {
+
+                span.className = myclassName;
+
+            }
+
+            textNode.parentNode.insertBefore(span, textNode);
+            span.appendChild(textNode);
+ 
+        }
+    }
+
+
+    function removeHighlight(el, start, end, myclassName) {
+        var rangeRemove = rangy.createRange();
+
+        rangeRemove.moveToBookmark({
+            containerNode: el,
+            start: start,
+            end: end
+        });
+
+        rangeRemove.splitBoundaries();
+        var textNodes = rangeRemove.getNodes([3]);
+       	
+        for (var i = 0, textNode, span; textNode = textNodes[i++];) {
+            var text = textNode.parentNode.textContent || textNode.innerText;
+            var node = document.createTextNode(text);
+
+            //Check if the current text's parent node is a span and the span has the same class name
+            if (textNode.parentNode.nodeName.toLowerCase() == "span" && $(textNode).parents("span." + myclassName) ) {
+                
+                if ($(textNode).parents("span." + myclassName).children(/(span\.w+)/).contents().length > 0 )
+                {
+                    $(textNode).parents("span." + myclassName).children().css("background-color","");
+                	
+                    childContents = ($(textNode).parents("span." + myclassName).html());
+
+                    var myNewColor;
+                    var lastColor = "rgb(255,255,255)";
+                    console.log($(textNode).parents("span"));
+                    if ($(textNode).parents("span").length > 2){
+                    //if (checkParents(textNode,myclassName) > 2){
+                        var i = 0;
+                        $(textNode).parents("span").each(function() {
+                           i += 1;
+
+                            if (this.className != myclassName && this.className != undefined  && this.className != ''){
+
+                            
+                                if (i == 2)
+                                {
+                                    lastColor = getStyle("." + this.className);
+                                    console.log(lastColor);
+                                }
+                                
+                                myNewColor = newColor(lastColor.split("(")[1].split(")")[0].split(","),getStyle("." + this.className).split("(")[1].split(")")[0].split(","));
+                                //console.log(myNewColor);
+                                lastColor = myNewColor;
+                            }
+                        });
+
+                        
+                        childContents = $(childContents).css("background-color",myNewColor);
+
+                    }
+
+					//console.log($(textNode).parents("span." + myclassName));
+                    $(textNode).parents("span." + myclassName).replaceWith(childContents);
+
+
+                }
+                else{
+                	//console.log($(textNode).parents("span").last());
+                    $(textNode).parents("span").last().css("background-color","");
+					//console.log(textNode.parentNode);
+                    $(textNode).parent().replaceWith(node);
+                    //console.log($(textNode).parent());
+                    
+                }
+                
+            }
+        }
+
+
+    }
+
+    function hasClass(element, cls) {
+        return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
+    }
+
+    function rgbToCMYK(color) {
+
+        var r = color[0] / 255;
+        var g = color[1] / 255;
+        var b = color[2] / 255;
+
+        var k = 1 - Math.max(r, g, b);
+        var c = (1 - r - k) / (1 - k);
+        var m = (1 - g - k) / (1 - k);
+        var y = (1 - b - k) / (1 - k);
+
+        var cmyk = [c, m, y, k];
+
+        return cmyk;
+    }
+
+
+    function CMYKTorgb(color) {
+        var r = Math.round(255 * (1 - color[0]) * (1 - color[3]));
+        var g = Math.round(255 * (1 - color[1]) * (1 - color[3]));
+        var b = Math.round(255 * (1 - color[2]) * (1 - color[3]));
+
+        var newRGB = "rgb(" + r + "," + g + "," + b + ")";
+        return newRGB;
+
+    }
+
+    function newColor(color1, color2) {
+        colorA = rgbToCMYK(color1);
+        colorB = rgbToCMYK(color2);
+
+        colorMixC = (colorA[0] + colorB[0]) / 2;
+        colorMixM = (colorA[1] + colorB[1]) / 2;
+        colorMixY = (colorA[2] + colorB[2]) / 2;
+        colorMixK = (colorA[3] + colorB[3]) / 2;
+
+
+        newBlend = [colorMixC, colorMixM, colorMixY, colorMixK];
+
+        var newBlendRGB = CMYKTorgb(newBlend);
+
+        return newBlendRGB;
+
+    }
+
+
+    function getStyle(className_) {
+        var styleSheets = window.document.styleSheets;
+        var styleSheetsLength = styleSheets.length
+        for (var i = 0; i < styleSheetsLength; i++) {
+            var classes = styleSheets[i].rules || styleSheets[i].cssRules;
+            if (classes != undefined  && classes != ''){
+                var classesLength = classes.length;
+                for (var x = 0; x < classesLength; x++) {
+                    if (classes[x].selectorText == className_) {
+                        var ret;
+                        ret = classes[x].style.backgroundColor;
+                        return ret;
+                    }
+                }
+            }
+
+        }
+
+    }
+    
+    function checkParents(node,myclassName){
+		var nodeCount;    	
+    	$(node).parents("span").each(function() {
+    		if (this.className != myclassName){
+    			nodeCount+=1; 
+    		}
+    	});
+    	return nodeCount;
+    }
+
+
+</script>
+
+
+    <script>
+    	$("#tableDialog").on("show.bs.modal",function(e){
+    		$.ajax({
+    			 type: 'GET',
+    	            url: $SCRIPT_ROOT + '/getUserTables',
+    	            dataType: 'json', 
+    	            contentType: false,
+    	            cache: false,
+    	            processData: true,
+    	            async: true,
+    	            success: function (userTables) {
+
+    	            	if ($.isEmptyObject(userTables)){
+    	            		$("#tableDialog").modal('hide').on('hidden.bs.modal', function(e){
+    	            			//$("#noresults").modal('show');
+    	            			//$(this).off('hidden.bs.modal');
+                        		$("#alertMessages").addClass("alert-warning");
+                        		$("#alertmessage").replaceWith("<strong>Warning!</strong> There are no records in this table.  Please choose another table.");
+                        		$("#alertMessages").show();
+    	            		});
+    	            		
+    	            		
+    	            		return;
+    	            	}
+    	            	var dbName = document.getElementById("dbname");
+    	        		var tblName = document.getElementById("tblname");
+    	        		
+    	        		
+    	        		if (dbName.options.length > 1){
+    	        			$('#dbname').find('option:not(:first)').remove();	
+    	        		}
+    	        		
+    	        		
+    	        		
+    	        		
+    	        		
+    	        		for (var table in userTables){
+    	        			dbName.options[dbName.options.length] = new Option(table,table);
+    	        		}
+    	        		dbName.onchange = function () {
+    	        			if (tblName.selectedIndex > 0 && dbName.selectedIndex > 0){
+								$('#submitDB').prop('disabled',false);	    	        	    	
+							}
+							else{
+								$('#submitDB').prop('disabled',true);	
+							}	
+    	        			
+    	        			
+    	        		
+    	        	        tblName.length = 1; // remove all options bar first
+    	        	        if (this.selectedIndex < 1) {
+    	        	          tblName.options[0].text = "Please select database first"
+    	        	          return; // done   
+    	        	        }  
+    	        	        tblName.options[0].text = "Please select table"
+    	        	        for (var tableIndex in userTables[this.value]) {
+    	        	        	
+    	        	            tblName.options[tblName.options.length] = new Option(userTables[this.value][tableIndex], userTables[this.value][tableIndex]);
+    	        	        }
+    	        	        if (tblName.options.length==2) {
+    	        	          tblName.selectedIndex=1;
+    	        	          tblName.onchange();
+    	        	        }
+   	        	        
+    	        	    }
+    	        	    dbName.onchange(); // reset in case page is reloaded
+    	        	    tblName.onchange = function (){
+    	        	    	
+							if (tblName.selectedIndex > 0 && dbName.selectedIndex > 0){
+								$('#submitDB').prop('disabled',false);	    	        	    	
+							}
+							else{
+								$('#submitDB').prop('disabled',true);	
+							}
+    	        	    	
+    	        	    }
+    		
+    			},
+    		});
+    		
+    		
+
+    	});
+    </script>
+    
+    <script>
+	    $(function(){
+	        $("#alertWarningBtn").on("click", function(){
+	            $(this).closest("." + $(this).attr("data-hide")).hide();
+	        });
+	    });
+    </script>
+</html>

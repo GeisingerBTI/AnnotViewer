@@ -1,0 +1,4 @@
+instance/
+*.pyc
+*.project
+*.pydevproject

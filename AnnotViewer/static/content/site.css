@@ -1,0 +1,153 @@
+﻿@import url(http://weloveiconfonts.com/api/?family=entypo);
+@import url(http://fonts.googleapis.com/css?family=Roboto);
+
+/*
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+*/
+
+body {
+  /*background: #272125;*/
+  background: white;
+  font-family: 'Roboto', sans-serif;
+  padding-top: 50px;
+  padding-bottom: 20px;
+  
+}
+
+/* Set padding to keep content from hitting the edges */
+/*
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+    */
+
+/* Set width on the form input elements since they're 100% wide by default */
+/*
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+    */
+
+/* styles for validation helpers */
+.field-validation-error {
+    color: #b94a48;
+}
+
+.field-validation-valid {
+    display: none;
+}
+
+input.input-validation-error {
+    border: 1px solid #b94a48;
+}
+
+input[type="checkbox"].input-validation-error {
+    border: 0 none;
+}
+
+.validation-summary-errors {
+    color: #b94a48;
+}
+
+.validation-summary-valid {
+    display: none;
+}
+
+
+/* zocial */
+[class*="entypo-"]:before {
+  font-family: 'entypo', sans-serif;
+}
+
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box; 
+}
+
+
+h2 {
+  /*color:rgba(255,255,255,.8);*/
+  color:gray;
+  margin-left:12px;
+}
+
+
+
+form {
+  position:relative;
+  margin: 50px auto;
+  width: 380px;
+  height: auto;
+}
+
+input {
+  padding: 16px;
+  border-radius:7px;
+  border:0px;
+  /*background: rgba(255,255,255,.2);*/
+  background:gray;
+  display: block;
+  margin: 15px;
+  width: 300px;  
+  color:black;
+  font-size:18px;
+  height: 54px;
+}
+
+input:focus {
+  outline-color: rgba(0,0,0,0);
+  background: lightgray;
+  /*color: #e74c3c;*/
+  color:black;
+}
+
+button {
+  float:right;
+  height: 121px;
+  width: 50px;
+  border: 0px;
+  background: #e74c3c;
+  border-radius:7px;
+  padding: 10px;
+  color:white;
+  font-size:22px;
+}
+
+.inputUserIcon {
+  position:absolute;
+  top:68px;
+  right: 80px;
+  color:white;
+}
+
+.inputPassIcon {
+  position:absolute;
+  top:136px;
+  right: 80px;
+  color:white;
+}
+
+input::-webkit-input-placeholder {
+  color: black;
+}
+
+input:focus::-webkit-input-placeholder {
+  color: black;
+}
+
+.highlight {
+    background-color: rgb(219,112,147);
+}
+
+p.DiseaseDisorder {
+    background-color: yellow;
+}
